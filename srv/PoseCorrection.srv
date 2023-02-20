@@ -1,0 +1,3 @@
+geometry_msgs/PoseStamped   initial_pose
+---
+geometry_msgs/PoseStamped   corrected_pose
