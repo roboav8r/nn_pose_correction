@@ -10,6 +10,7 @@ import numpy as np
 from sklearn import neighbors
 from nn_pose_correction.srv import PoseCorrection
 from sensor_msgs.msg import PointCloud2
+from visualization_msgs.msg import MarkerArray, Marker
 
 def handle_nn_pose_corr(req):
     print("Server heard %s "%(req))
@@ -18,8 +19,38 @@ def handle_nn_pose_corr(req):
     depth_msg = rospy.wait_for_message('/camera/depth/points', PointCloud2)
     # print("Server heard pointcloud msg %s "%(depth_msg))
 
+    # Initialize markers for visualization
+    markerArray = MarkerArray()
+    init_marker = Marker()
+    init_marker.header.frame_id = depth_msg.header.frame_id
+    init_marker.type = init_marker.SPHERE
+    init_marker.scale.x = 0.02
+    init_marker.scale.y = 0.02
+    init_marker.scale.z = 0.02
+    init_marker.color.a = 1.0
+    init_marker.color.r = 1.0
+    init_marker.color.g = 0.0
+    init_marker.color.b = 0.0
+    init_marker.pose.orientation.w = 1.0
+    corr_marker = Marker()
+    corr_marker.header.frame_id = depth_msg.header.frame_id
+    corr_marker.type = corr_marker.SPHERE
+    corr_marker.scale.x = 0.02
+    corr_marker.scale.y = 0.02
+    corr_marker.scale.z = 0.02
+    corr_marker.color.a = 1.0
+    corr_marker.color.r = 0.0
+    corr_marker.color.g = 1.0
+    corr_marker.color.b = 0.0
+    corr_marker.pose.orientation.w = 1.0
+
     # TODO Transform target point into depth message frame
     converted_pose = req.initial_pose
+
+    # Publish initial pose marker
+    init_marker.pose.position = converted_pose.pose.position
+    markerArray.markers.append(init_marker)
+    marker_pub.publish(markerArray)
 
     # Format data as numpy arrays
     pcl_arr = ros_numpy.numpify(depth_msg)
@@ -33,7 +64,7 @@ def handle_nn_pose_corr(req):
     # TODO Remove points outside a given radius?
 
     # Run inference, get corrected pose in pointcloud frame
-    n_neighbors = 15
+    n_neighbors = 30
     knn = neighbors.KNeighborsRegressor(n_neighbors, weights="uniform")
     corr_xyz = knn.fit(pcl_xyz,pcl_xyz).predict(tgt_xyz)
     print("Corrected xyz (pointcloud frame) %s "%(corr_xyz))
@@ -45,20 +76,25 @@ def handle_nn_pose_corr(req):
     corrected_pose.pose.position.x = corr_xyz[0,0]
     corrected_pose.pose.position.y = corr_xyz[0,1]
     corrected_pose.pose.position.z = corr_xyz[0,2]
+
+    # Visualize
+    corr_marker.pose.position = corrected_pose.pose.position
+    markerArray.markers.append(init_marker)
+    markerArray.markers.append(corr_marker)
+    marker_pub.publish(markerArray)
+
     return corrected_pose
 
 
-def nn_pose_corr_server():
+
+if __name__ == "__main__":
     rospy.init_node('nn_pose_corr_server')
 
     s = rospy.Service('nn_pose_corr', PoseCorrection, handle_nn_pose_corr)
-
+    marker_pub = rospy.Publisher('nn_pose_markers', MarkerArray)
 
     tfBuffer = tf2_ros.Buffer()
     listener = tf2_ros.TransformListener(tfBuffer)
 
     print("Ready to correct pose using nearest-neighbor regression.")
     rospy.spin()
-
-if __name__ == "__main__":
-    nn_pose_corr_server()
