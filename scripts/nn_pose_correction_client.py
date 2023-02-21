@@ -19,10 +19,10 @@ def nn_pose_corr_client(initial_pose):
 if __name__ == "__main__":
 
     init_pose = PoseStamped()
-    init_pose.header.frame_id = 'camera_depth_optical_frame'
-    init_pose.pose.position.x = 0
+    init_pose.header.frame_id = 'tripod_base_link'
+    init_pose.pose.position.x = .25
     init_pose.pose.position.y = 0
-    init_pose.pose.position.z = .25
+    init_pose.pose.position.z = .10
     init_pose.pose.orientation.x = 0
     init_pose.pose.orientation.y = 0
     init_pose.pose.orientation.z = 0

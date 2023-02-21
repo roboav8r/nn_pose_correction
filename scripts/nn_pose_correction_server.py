@@ -4,7 +4,7 @@ from __future__ import print_function
 
 #from beginner_tutorials.srv import AddTwoInts,AddTwoIntsResponse
 import rospy
-import tf2_ros
+import tf
 import ros_numpy
 import numpy as np
 from sklearn import neighbors
@@ -33,7 +33,7 @@ def handle_nn_pose_corr(req):
     init_marker.color.b = 0.0
     init_marker.pose.orientation.w = 1.0
     corr_marker = Marker()
-    corr_marker.header.frame_id = depth_msg.header.frame_id
+    corr_marker.header.frame_id = req.initial_pose.header.frame_id
     corr_marker.type = corr_marker.SPHERE
     corr_marker.scale.x = 0.02
     corr_marker.scale.y = 0.02
@@ -44,8 +44,10 @@ def handle_nn_pose_corr(req):
     corr_marker.color.b = 0.0
     corr_marker.pose.orientation.w = 1.0
 
-    # TODO Transform target point into depth message frame
-    converted_pose = req.initial_pose
+    # Transform target point into depth message frame
+    t = rospy.Time.now()
+    listener.waitForTransform(depth_msg.header.frame_id,req.initial_pose.header.frame_id,t,rospy.Duration(5))
+    converted_pose = listener.transformPose(depth_msg.header.frame_id, req.initial_pose)
 
     # Publish initial pose marker
     init_marker.pose.position = converted_pose.pose.position
@@ -69,21 +71,22 @@ def handle_nn_pose_corr(req):
     corr_xyz = knn.fit(pcl_xyz,pcl_xyz).predict(tgt_xyz)
     print("Corrected xyz (pointcloud frame) %s "%(corr_xyz))
 
-    # TODO Transform corrected pose from pointcloud into original frame
-
     # Populate corrected pose message and publish
-    corrected_pose = req.initial_pose
+    corrected_pose = converted_pose
     corrected_pose.pose.position.x = corr_xyz[0,0]
     corrected_pose.pose.position.y = corr_xyz[0,1]
     corrected_pose.pose.position.z = corr_xyz[0,2]
 
+    # Transform corrected pose from pointcloud into original frame
+    corrected_pose_original = listener.transformPose(req.initial_pose.header.frame_id, converted_pose)
+
     # Visualize
-    corr_marker.pose.position = corrected_pose.pose.position
+    corr_marker.pose.position = corrected_pose_original.pose.position
     markerArray.markers.append(init_marker)
     markerArray.markers.append(corr_marker)
     marker_pub.publish(markerArray)
 
-    return corrected_pose
+    return corrected_pose_original
 
 
 
@@ -93,8 +96,7 @@ if __name__ == "__main__":
     s = rospy.Service('nn_pose_corr', PoseCorrection, handle_nn_pose_corr)
     marker_pub = rospy.Publisher('nn_pose_markers', MarkerArray)
 
-    tfBuffer = tf2_ros.Buffer()
-    listener = tf2_ros.TransformListener(tfBuffer)
+    listener = tf.TransformListener()
 
     print("Ready to correct pose using nearest-neighbor regression.")
     rospy.spin()

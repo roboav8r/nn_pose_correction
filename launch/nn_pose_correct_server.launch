@@ -3,6 +3,9 @@
   <!-- Launch the camera node -->
   <include file="$(find realsense2_camera)/launch/rs_d435_camera_with_model.launch" />
 
+  <!-- Launch a static transform from camera to camera base for development -->
+  <node pkg="tf" type="static_transform_publisher" name="tripod_to_camera" args="0 0 0.10 0 0 0 /tripod_base_link /base_link 10"/>
+
   <!-- Launch depth-to-PCL node -->
   <node pkg="nodelet" type="nodelet" name="nodelet_manager" args="manager" />
 
