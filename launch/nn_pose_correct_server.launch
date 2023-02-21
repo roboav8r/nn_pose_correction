@@ -18,7 +18,9 @@
 
 
   <!-- Launch the server node -->
-  <node pkg="nn_pose_correction" type="nn_pose_correction_server.py" name="nn_pose_corr_server" output="screen" />
+  <node pkg="nn_pose_correction" type="nn_pose_correction_server.py" name="nn_pose_corr_server" output="screen" >
+      <param name="pointcloud_topic" value="camera/depth/points" />
+  </node>
 
   <!-- <group ns="philbart">
 

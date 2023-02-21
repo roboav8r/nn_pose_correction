@@ -16,8 +16,8 @@ def handle_nn_pose_corr(req):
     print("Server heard %s "%(req))
 
     # Get pointcloud message
-    depth_msg = rospy.wait_for_message('/camera/depth/points', PointCloud2)
-    # print("Server heard pointcloud msg %s "%(depth_msg))
+    print(pcl_topic)
+    depth_msg = rospy.wait_for_message(pcl_topic, PointCloud2, rospy.Duration(1))
 
     # Initialize markers for visualization
     markerArray = MarkerArray()
@@ -97,6 +97,7 @@ if __name__ == "__main__":
     marker_pub = rospy.Publisher('nn_pose_markers', MarkerArray)
 
     listener = tf.TransformListener()
+    pcl_topic = rospy.get_param('~pointcloud_topic','camera/depth/points')
 
     print("Ready to correct pose using nearest-neighbor regression.")
     rospy.spin()
