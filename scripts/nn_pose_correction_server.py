@@ -8,7 +8,7 @@ import tf
 import ros_numpy
 import numpy as np
 from sklearn import neighbors
-from nn_pose_correction.srv import PoseCorrection
+from nn_pose_correction.srv import grasp_refinement_john
 from sensor_msgs.msg import PointCloud2
 from visualization_msgs.msg import MarkerArray, Marker
 
@@ -93,7 +93,7 @@ def handle_nn_pose_corr(req):
 if __name__ == "__main__":
     rospy.init_node('nn_pose_corr_server')
 
-    s = rospy.Service('nn_pose_corr', PoseCorrection, handle_nn_pose_corr)
+    s = rospy.Service('grasp_refinement_john', grasp_refinement_john, handle_nn_pose_corr)
     marker_pub = rospy.Publisher('nn_pose_markers', MarkerArray)
 
     listener = tf.TransformListener()

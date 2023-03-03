@@ -8,9 +8,9 @@ from nn_pose_correction.srv import *
 from geometry_msgs.msg import PoseStamped
 
 def nn_pose_corr_client(initial_pose):
-    rospy.wait_for_service('nn_pose_corr')
+    rospy.wait_for_service('mega/grasp_refinement_john')
     try:
-        nn_pose_corr = rospy.ServiceProxy('nn_pose_corr', PoseCorrection)
+        nn_pose_corr = rospy.ServiceProxy('mega/grasp_refinement_john', grasp_refinement_john)
         corrected_pose = nn_pose_corr(initial_pose)
         return corrected_pose
     except rospy.ServiceException as e:

@@ -6,6 +6,9 @@
   <!-- Launch a static transform from camera to camera base for development -->
   <node pkg="tf" type="static_transform_publisher" name="tripod_to_camera" args="0 0 0.10 0 0 0 /tripod_base_link /base_link 10"/>
 
+
+
+
   <!-- Launch depth-to-PCL node -->
   <node pkg="nodelet" type="nodelet" name="nodelet_manager" args="manager" />
 
@@ -18,8 +21,8 @@
 
 
   <!-- Launch the server node -->
-  <node pkg="nn_pose_correction" type="nn_pose_correction_server.py" name="nn_pose_corr_server" output="screen" >
-      <param name="pointcloud_topic" value="camera/depth/points" />
+  <node pkg="nn_pose_correction" type="nn_pose_correction_server.py" name="nn_pose_corr_server" output="screen" ns="mega">
+      <param name="pointcloud_topic" value="/camera/depth/points" />
   </node>
 
   <!-- <group ns="philbart">
